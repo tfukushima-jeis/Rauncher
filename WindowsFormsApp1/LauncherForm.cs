@@ -275,7 +275,7 @@ namespace WindowsFormsApp1
             xmlDoc.Load(@"test.xml");
             var tabNodes = xmlDoc.SelectNodes("tabs/tab");
 
-            Console.WriteLine(clickedTabPage.Name);
+            /*Console.WriteLine(clickedTabPage.Name);
             for (var i = 0; i < tabNodes.Count; i++)
             {
                 var tabid = ((XmlElement)tabNodes[i]).GetAttribute("id");
@@ -311,7 +311,7 @@ namespace WindowsFormsApp1
             {
                 tabEx.Controls.Clear();
                 Launcher_Load();
-            }
+            }*/
 
         }
 
