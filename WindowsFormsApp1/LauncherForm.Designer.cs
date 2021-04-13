@@ -1,6 +1,6 @@
 ﻿namespace WindowsFormsApp1
 {
-    partial class Form1
+    partial class LauncherForm
     {
         /// <summary>
         /// 必要なデザイナー変数です。
@@ -28,13 +28,20 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "Form1";
+            this.SuspendLayout();
+            // 
+            // Form1
+            // 
+            this.ClientSize = new System.Drawing.Size(606, 606);
+            this.Name = "Form1";
+            this.ResumeLayout(false);
+
         }
 
         #endregion
+        public System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button Save_button;
+        private System.Windows.Forms.Button Load_button;
     }
 }
 
