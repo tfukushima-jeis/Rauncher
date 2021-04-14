@@ -18,7 +18,6 @@ namespace WindowsFormsApp1
     public partial class LauncherForm : Form
     {
         TabEx tabEx = new TabEx();
-        //TabControlEx tabEx = new TabControlEx();
         public List<PanelEx> panels = new List<PanelEx>();
         ContextMenuStrip appContextMenuStrip; //アプリケーションのコンテキストメニュー
         Control contextMenuSourceControl = null;
@@ -36,6 +35,9 @@ namespace WindowsFormsApp1
         public LauncherForm()
         {
             InitializeComponent();
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
 
             //タブコントロールの設定
             tabEx.Location = new Point(0, 0);
@@ -126,7 +128,8 @@ namespace WindowsFormsApp1
                     textBox.Name = i.ToString() + "_t_" + j.ToString();
                     textBox.Text = appName;
                     textBox.Visible = false;
-                    textBox.KeyPress += new KeyPressEventHandler(textBox_KeyPress);                    
+                    textBox.KeyPress += new KeyPressEventHandler(textBox_KeyPress);
+                    //textBox.Leave += Leave_TextBox;
 
                     tabPage.Controls.Add(label);
                     tabPage.Controls.Add(textBox);
@@ -264,6 +267,7 @@ namespace WindowsFormsApp1
             textBox = this.Controls.Find(tName, true);
         }
 
+        //タブコントロールのコンテキストメニューアイテム（削除）
         public void TabMenuItem_Click(object sender, EventArgs e)
         {
             Console.WriteLine("DeleteTab_Start");
@@ -275,35 +279,22 @@ namespace WindowsFormsApp1
             xmlDoc.Load(@"test.xml");
             var tabNodes = xmlDoc.SelectNodes("tabs/tab");
 
-            /*Console.WriteLine(clickedTabPage.Name);
+            Console.WriteLine(clickedTabPage.Name);
             for (var i = 0; i < tabNodes.Count; i++)
             {
                 var tabid = ((XmlElement)tabNodes[i]).GetAttribute("id");
+                XmlNode tabNode = xmlDoc.SelectSingleNode("tabs/tab[@id='" + i + "']");
 
                 if (tabid == clickedTabPage.Name)
                 {
-                    var appNodes = xmlDoc.SelectNodes("tabs/tab[@id='" + i + "']/app");
-                    var appId = appNodes.Count;
-
-                    XmlNode tabNode = xmlDoc.SelectSingleNode("tabs/tab[@id='" + i + "']/app[@id='" + j + "']");
+                    tabNode.ParentNode.RemoveChild(tabNode);
                     deleteflg = true;
-
-                    for (var j = 0; j < appNodes.Count; j++)
-                    {
-                        XmlNode appNode = xmlDoc.SelectSingleNode("tabs/tab[@id='" + i + "']/app[@id='" + j + "']");
-                        if (source.Name == i.ToString() + "_p_" + j.ToString())
-                        {
-                            appNode.ParentNode.RemoveChild(appNode);
-                            deleteflg = true;
-                        }
-
-                        if (deleteflg)
-                        {
-                            ((XmlElement)appNode).SetAttribute("id", (j - 1).ToString());
-                        }
-                    }
                 }
 
+                if (deleteflg)
+                {
+                    ((XmlElement)tabNode).SetAttribute("id", (i - 1).ToString());
+                }
             }
             xmlDoc.Save(@"test.xml");
 
@@ -311,8 +302,7 @@ namespace WindowsFormsApp1
             {
                 tabEx.Controls.Clear();
                 Launcher_Load();
-            }*/
-
+            }
         }
 
         //アプリケーションのコンテキストメニューアイテム１（削除）
@@ -375,9 +365,48 @@ namespace WindowsFormsApp1
             ((TextBox)textBox[0]).Focus();
         }
 
+        /*private void Leave_TextBox(object sender, EventArgs e)
+        {
+            
+            Control source = contextMenuSourceControl;
+            if (!string.IsNullOrEmpty(((TextBox)textBox[0]).Text))
+            {
+                Console.WriteLine(((TextBox)textBox[0]).Text);
+                var xmlDoc = new XmlDocument();
+                xmlDoc.Load(@"test.xml");
+                var tabNodes = xmlDoc.SelectNodes("tabs/tab");
+
+                for (var i = 0; i < tabNodes.Count; i++)
+                {
+                    var tabid = ((XmlElement)tabNodes[i]).GetAttribute("id");
+
+                    if (tabid == source.Parent.Name)
+                    {
+                        var appNodes = xmlDoc.SelectNodes("tabs/tab[@id='" + i + "']/app");
+                        var appId = appNodes.Count;
+
+                        for (var j = 0; j < appNodes.Count; j++)
+                        {
+                            XmlNode appNode = xmlDoc.SelectSingleNode("tabs/tab[@id='" + i + "']/app[@id='" + j + "']/name");
+
+                            if (source.Name == i.ToString() + "_p_" + j.ToString())
+                            {
+                                appNode.InnerText = ((TextBox)textBox[0]).Text;
+                            }
+                        }
+                    }
+                }
+                xmlDoc.Save(@"test.xml");
+
+                ((TextBox)textBox[0]).Visible = false;
+                ((Label)label[0]).Text = ((TextBox)textBox[0]).Text;
+                ((Label)label[0]).Visible = true;
+            }
+        }*/
+
         private void textBox_KeyPress(object sender, KeyPressEventArgs e)
         {
-            Control source = contextMenuSourceControl;//menu.SourceControl;
+            Control source = contextMenuSourceControl;
             if (e.KeyChar == (Char)Keys.Enter)
             {
                 var xmlDoc = new XmlDocument();                

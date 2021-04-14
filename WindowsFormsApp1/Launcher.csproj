@@ -80,9 +80,6 @@
     <Compile Include="TabEx.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="AppContextMenu.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="LauncherForm.cs">
       <SubType>Form</SubType>
     </Compile>
