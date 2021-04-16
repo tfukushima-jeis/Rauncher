@@ -71,7 +71,7 @@ namespace WindowsFormsApp1
 
                 //タブ情報ファイルの読み込み
                 var xmlDoc = new XmlDocument();
-                xmlDoc.Load(@"test.xml");
+                xmlDoc.Load(@"config.xml");
                 var tabNodes = xmlDoc.SelectNodes("tabs/tab"); //tabタグ情報
 
                 for (var i = 0; i < tabNodes.Count; i++)
@@ -81,10 +81,10 @@ namespace WindowsFormsApp1
                     if (tabid == tabName)
                     {
                         XmlNode tabNameNode = xmlDoc.SelectSingleNode("tabs/tab[@id='" + i + "']/tabname");
-                        tabNameNode.InnerText = textbox.Text;
+                        tabNameNode.InnerText = textbox.Text.Substring(0, 12);
                     }
                 }
-                xmlDoc.Save(@"test.xml");
+                xmlDoc.Save(@"config.xml");
             }
             placeHolder.Close();
         }
