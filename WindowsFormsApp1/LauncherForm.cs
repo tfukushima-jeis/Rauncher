@@ -26,6 +26,7 @@ namespace WindowsFormsApp1
         ContextMenuStrip tabContextMenuStrip = new ContextMenuStrip();
         ToolStripMenuItem menuItem = new ToolStripMenuItem();
         TabPage clickedTabPage = null;
+        TabPage saveTabPage = null;
 
         int tabMax = 8; //タブの最大登録数
         int appMax = 30; //アプリケーションの最大登録数
@@ -53,6 +54,7 @@ namespace WindowsFormsApp1
             menuItem.Click += new EventHandler(TabMenuItem_Click);
             tabContextMenuStrip.Items.Add(menuItem);
             tabContextMenuStrip.Opening += new CancelEventHandler(TabContextMenu_Opening);
+            tabContextMenuStrip.Closing += new ToolStripDropDownClosingEventHandler(TabContextMenu_Closing);
             tabEx.ContextMenuStrip = tabContextMenuStrip;
 
             //アプリケーション用コンテキストメニュー設定
@@ -79,9 +81,23 @@ namespace WindowsFormsApp1
         public void Launcher_Load()
         {
             //Console.WriteLine("Load_Start");
+            //config.xmlが存在しない場合新規作成
+            string filePath = @"config.xml";
+            if (!File.Exists(filePath))
+            {
+                CreateConfigXML();
+            }
+
+            //toolフォルダーが存在しない場合新規作成
+            string folderPath = @"tool";
+            if (!Directory.Exists(folderPath))
+            {
+                CreateToolFolder();
+            }
+
             //タブ情報ファイルの読み込み
             var xmlDoc = new XmlDocument();
-            xmlDoc.Load(@"test.xml");
+            xmlDoc.Load(@"config.xml");
             var tabs = xmlDoc.SelectNodes("tabs/tab"); //tabタグ情報
 
             //tabタグの数分タブコントロールにタブページ追加
@@ -115,7 +131,14 @@ namespace WindowsFormsApp1
                     //アプリケーションのラベル設定
                     Label label = new Label();
                     label.Name = i.ToString() + "_l_" + j.ToString();
-                    label.Text = appName;
+                    if (appName.Length > appNameMax)
+                    {
+                        label.Text = appName.Substring(0, appNameMax);
+                    }
+                    else
+                    {
+                        label.Text = appName;
+                    }
                     label.TextAlign = ContentAlignment.MiddleCenter;
                     label.AutoSize = false;
                     label.Size = new Size(85, 25);
@@ -126,7 +149,14 @@ namespace WindowsFormsApp1
                     textBox.Location = new Point(8 + (j % 6) * 100, 78 + (j / 6) * 100);
                     textBox.Size = new Size(85, 50);
                     textBox.Name = i.ToString() + "_t_" + j.ToString();
-                    textBox.Text = appName;
+                    if (appName.Length > appNameMax)
+                    {
+                        textBox.Text = appName.Substring(0, appNameMax);
+                    }
+                    else
+                    {
+                        textBox.Text = appName;
+                    }
                     textBox.Visible = false;
                     textBox.KeyPress += new KeyPressEventHandler(textBox_KeyPress);
                     //textBox.Leave += Leave_TextBox;
@@ -140,8 +170,12 @@ namespace WindowsFormsApp1
                         break;
                     }
                 }
+                if (i > 7)
+                {
+                    break;
+                }
             }
-            this.Controls.Add(tabEx);
+            Controls.Add(tabEx);
         }
 
         [DllImport("user32.dll")]
@@ -150,6 +184,36 @@ namespace WindowsFormsApp1
         private void tabEx_HandleCreated(object sender, EventArgs e)
         {
             SendMessage(this.tabEx.Handle, TCM_SETMINTABWIDTH, IntPtr.Zero, (IntPtr)16);
+        }
+
+        //config.xmlの新規作成
+        public void CreateConfigXML()
+        {
+            XmlWriter writer = XmlWriter.Create(@"config.xml");
+
+            writer.WriteStartElement("tabs");
+
+            writer.WriteStartElement("tab");
+            writer.WriteAttributeString("id", "0");
+            writer.WriteElementString("tabname", newTabName);
+            writer.WriteEndElement();
+
+            writer.WriteStartElement("tab");
+            writer.WriteAttributeString("id", "1");
+            writer.WriteElementString("tabname", "+");
+            writer.WriteEndElement();
+
+            writer.WriteEndElement();
+
+            writer.Close();
+        }
+
+        //toolフォルダの新規作成
+        public void CreateToolFolder()
+        {
+            string folderPath = @"tool";
+            DirectoryInfo di = new DirectoryInfo(folderPath);
+            di.Create();
         }
 
         //タブコントロールクリック時にクリック座標がタブ部分を含んでいるか判定
@@ -169,7 +233,7 @@ namespace WindowsFormsApp1
         private void tabControlEx_MouseUp(object sender, MouseEventArgs e)
         {
             //Console.WriteLine("tabControlEx_MouseUp");
-            if (this.clickedTabPage != null)
+            if (clickedTabPage != null)
             {
                 if (e.Button == MouseButtons.Right)
                 {
@@ -189,14 +253,18 @@ namespace WindowsFormsApp1
         //タブコントロールの末尾のタブ（＋ボタン）押下時に新しいタブ追加
         private void TabControl_Selecting(object sender, TabControlCancelEventArgs e)
         {
-            //Console.WriteLine("AddNewTab_Start");
+
+            Console.WriteLine("AddNewTab_Start");
             if (e.TabPage != null)
             {
+                Console.WriteLine(e.TabPage.Name);
+                Console.WriteLine((tabEx.TabCount - 1).ToString());
                 if (e.TabPageIndex == tabEx.TabCount - 1)
                 {
                     e.Cancel = true;
                     if (tabEx.TabCount - 1 < tabMax)
                     {
+                        //Console.WriteLine("AddNewTab_Start");
                         TabPage newTabPage = new TabPage();
                         newTabPage.Name = (tabEx.TabCount - 1).ToString();
                         newTabPage.Text = newTabName;
@@ -206,7 +274,7 @@ namespace WindowsFormsApp1
 
                         //タブ情報ファイルの読み込み
                         var xmlDoc = new XmlDocument();
-                        xmlDoc.Load(@"test.xml");
+                        xmlDoc.Load(@"config.xml");
                         var tabNodes = xmlDoc.SelectNodes("tabs/tab"); //tabタグ情報
 
                         //タブ情報ファイルの更新
@@ -221,7 +289,7 @@ namespace WindowsFormsApp1
                         tabnameElement.AppendChild(tabnameText); ;
                         newTab.AppendChild(tabnameElement);
                         rootNode.AppendChild(newTab);
-                        xmlDoc.Save(@"test.xml");
+                        xmlDoc.Save(@"config.xml");
                     }
                     else
                     {
@@ -239,17 +307,35 @@ namespace WindowsFormsApp1
             contextMenuSourceControl = menu.SourceControl;
 
             //タブが押下された場合
-            if (this.clickedTabPage != null)
+            if (clickedTabPage != null)
             {
-                menuItem.Text = "削除";
-                menu.Items.Clear();
-                menu.Items.Add(menuItem);
+                Console.WriteLine(clickedTabPage.Name);
+                Console.WriteLine((tabEx.TabCount - 1).ToString());
+                //+ボタン以外が押されたとき
+                if (!(clickedTabPage.Name == (tabEx.TabCount - 1).ToString()))
+                {
+                    menuItem.Text = "削除";
+                    menu.Items.Clear();
+                    menu.Items.Add(menuItem);
+                    saveTabPage = clickedTabPage;
+                }
+                else
+                {
+                    e.Cancel = true;
+                }
             }
             else
             {
                 e.Cancel = true;
-            }
+            }            
         }
+
+        //タブコントロール用コンテキストメニューが閉じるとき
+        private void TabContextMenu_Closing(object sender, ToolStripDropDownClosingEventArgs e)
+        {
+            Console.WriteLine("TabContextMenu_Close");
+            clickedTabPage = null;
+        }        
 
         //アプリケーション用コンテキストメニュー表示時、対象アプリケーション情報の退避
         private void AppContextMenu_Opening(object sender, CancelEventArgs e)
@@ -263,8 +349,8 @@ namespace WindowsFormsApp1
             var lName = arr[0] + "_l_" + arr[2];
             var tName = arr[0] + "_t_" + arr[2];
 
-            label = this.Controls.Find(lName, true);
-            textBox = this.Controls.Find(tName, true);
+            label = Controls.Find(lName, true);
+            textBox = Controls.Find(tName, true);
         }
 
         //タブコントロールのコンテキストメニューアイテム（削除）
@@ -274,34 +360,69 @@ namespace WindowsFormsApp1
             Control source = contextMenuSourceControl;
             bool deleteflg = false;
 
-            //タブ情報ファイルの読み込み
-            var xmlDoc = new XmlDocument();
-            xmlDoc.Load(@"test.xml");
-            var tabNodes = xmlDoc.SelectNodes("tabs/tab");
+            //ダイアログの表示
+            DialogResult result = MessageBox.Show("「" + saveTabPage.Text + "」タブを削除しますか？",
+                "確認",
+                MessageBoxButtons.OKCancel,
+                MessageBoxIcon.Warning,
+                MessageBoxDefaultButton.Button2);
 
-            Console.WriteLine(clickedTabPage.Name);
-            for (var i = 0; i < tabNodes.Count; i++)
+            if (result == DialogResult.OK)
             {
-                var tabid = ((XmlElement)tabNodes[i]).GetAttribute("id");
-                XmlNode tabNode = xmlDoc.SelectSingleNode("tabs/tab[@id='" + i + "']");
+                //タブ情報ファイルの読み込み
+                var xmlDoc = new XmlDocument();
+                xmlDoc.Load(@"config.xml");
+                var tabNodes = xmlDoc.SelectNodes("tabs/tab");
 
-                if (tabid == clickedTabPage.Name)
+                Console.WriteLine(tabNodes.Count);
+                for (var i = 0; i < tabNodes.Count; i++)
                 {
-                    tabNode.ParentNode.RemoveChild(tabNode);
-                    deleteflg = true;
+                    var tabid = ((XmlElement)tabNodes[i]).GetAttribute("id");
+                    XmlNode tabNode = xmlDoc.SelectSingleNode("tabs/tab[@id='" + i + "']");
+
+                    if (tabid == saveTabPage.Name)
+                    {
+                        tabNode.ParentNode.RemoveChild(tabNode);
+                        deleteflg = true;
+                    }
+
+                    /*if (tabEx.TabCount < 1)
+                    {
+                        Console.WriteLine(tabEx.TabCount - 1);
+                        TabPage newTabPage = new TabPage();
+                        newTabPage.Name = (tabEx.TabCount - 1).ToString();
+                        newTabPage.Text = newTabName;
+
+                        tabEx.TabPages.Insert(tabEx.TabCount - 1, newTabPage);
+                        tabEx.SelectedIndex = tabEx.TabCount - 1;
+
+                        //タブ情報ファイルの更新
+                        XmlNode plustabNode = xmlDoc.SelectSingleNode("tabs/tab[@id='" + (tabEx.TabCount - 2).ToString() + "']/tabname");
+                        plustabNode.InnerText = newTabName;
+
+                        XmlNode rootNode = xmlDoc.SelectSingleNode("tabs");
+                        XmlNode newTab = xmlDoc.CreateNode(XmlNodeType.Element, "tab", null);
+                        ((XmlElement)newTab).SetAttribute("id", (tabEx.TabCount - 1).ToString());
+                        XmlElement tabnameElement = xmlDoc.CreateElement("tabname");
+                        XmlText tabnameText = xmlDoc.CreateTextNode("+");
+                        tabnameElement.AppendChild(tabnameText); ;
+                        newTab.AppendChild(tabnameElement);
+                        rootNode.AppendChild(newTab);
+                    }*/
+
+                    if (deleteflg)
+                    {
+                        ((XmlElement)tabNode).SetAttribute("id", (i - 1).ToString());
+                    }
                 }
+                xmlDoc.Save(@"config.xml");
 
                 if (deleteflg)
                 {
-                    ((XmlElement)tabNode).SetAttribute("id", (i - 1).ToString());
+                    //tabEx.Controls.Remove(tabEx.Selecting);
+                    tabEx.Controls.Clear();
+                    Launcher_Load();
                 }
-            }
-            xmlDoc.Save(@"test.xml");
-
-            if (deleteflg)
-            {
-                tabEx.Controls.Clear();
-                Launcher_Load();
             }
         }
 
@@ -312,43 +433,53 @@ namespace WindowsFormsApp1
             Control source = contextMenuSourceControl;//menu.SourceControl;
             bool deleteflg = false;
 
-            //タブ情報ファイルの読み込み
-            var xmlDoc = new XmlDocument();
-            xmlDoc.Load(@"test.xml");
-            var tabNodes = xmlDoc.SelectNodes("tabs/tab");
+            //ダイアログの表示
+            DialogResult result = MessageBox.Show("「" + ((Label)label[0]).Text + "」を削除しますか？",
+                "確認",
+                MessageBoxButtons.OKCancel,
+                MessageBoxIcon.Warning,
+                MessageBoxDefaultButton.Button2);
 
-            for (var i = 0; i < tabNodes.Count; i++)
+            if (result == DialogResult.OK)
             {
-                var tabid = ((XmlElement)tabNodes[i]).GetAttribute("id");
+                //タブ情報ファイルの読み込み
+                var xmlDoc = new XmlDocument();
+                xmlDoc.Load(@"config.xml");
+                var tabNodes = xmlDoc.SelectNodes("tabs/tab");
 
-                if (tabid == source.Parent.Name)
+                for (var i = 0; i < tabNodes.Count; i++)
                 {
-                    var appNodes = xmlDoc.SelectNodes("tabs/tab[@id='" + i + "']/app");
-                    var appId = appNodes.Count;
+                    var tabid = ((XmlElement)tabNodes[i]).GetAttribute("id");
 
-                    for (var j = 0; j < appNodes.Count; j++)
+                    if (tabid == source.Parent.Name)
                     {
-                        XmlNode appNode = xmlDoc.SelectSingleNode("tabs/tab[@id='" + i + "']/app[@id='" + j + "']");
-                        if (source.Name == i.ToString() + "_p_" + j.ToString())
-                        {
-                            appNode.ParentNode.RemoveChild(appNode);
-                            deleteflg = true;
-                        }
+                        var appNodes = xmlDoc.SelectNodes("tabs/tab[@id='" + i + "']/app");
+                        var appId = appNodes.Count;
 
-                        if (deleteflg)
+                        for (var j = 0; j < appNodes.Count; j++)
                         {
-                            ((XmlElement)appNode).SetAttribute("id", (j - 1).ToString());
+                            XmlNode appNode = xmlDoc.SelectSingleNode("tabs/tab[@id='" + i + "']/app[@id='" + j + "']");
+                            if (source.Name == i.ToString() + "_p_" + j.ToString())
+                            {
+                                appNode.ParentNode.RemoveChild(appNode);
+                                deleteflg = true;
+                            }
+
+                            if (deleteflg)
+                            {
+                                ((XmlElement)appNode).SetAttribute("id", (j - 1).ToString());
+                            }
                         }
                     }
+
                 }
+                xmlDoc.Save(@"config.xml");
 
-            }
-            xmlDoc.Save(@"test.xml");
-
-            if (deleteflg)
-            {
-                tabEx.Controls.Clear();
-                Launcher_Load();
+                if (deleteflg)
+                {
+                    tabEx.Controls.Clear();
+                    Launcher_Load();
+                }
             }
         }
 
@@ -358,7 +489,7 @@ namespace WindowsFormsApp1
             //Console.WriteLine("ChangeAppName_Start");
             Control source = contextMenuSourceControl;
             var xmlDoc = new XmlDocument();
-            xmlDoc.Load(@"test.xml");
+            xmlDoc.Load(@"config.xml");
 
             ((Label)label[0]).Visible = false;
             ((TextBox)textBox[0]).Visible = true;
@@ -410,7 +541,7 @@ namespace WindowsFormsApp1
             if (e.KeyChar == (Char)Keys.Enter)
             {
                 var xmlDoc = new XmlDocument();                
-                xmlDoc.Load(@"test.xml");
+                xmlDoc.Load(@"config.xml");
                 var tabNodes = xmlDoc.SelectNodes("tabs/tab");
 
                 for (var i = 0; i < tabNodes.Count; i++)
@@ -433,7 +564,7 @@ namespace WindowsFormsApp1
                         }
                     }
                 }
-                xmlDoc.Save(@"test.xml");
+                xmlDoc.Save(@"config.xml");
 
                 ((TextBox)textBox[0]).Visible = false;
                 ((Label)label[0]).Text = ((TextBox)textBox[0]).Text;
@@ -444,7 +575,7 @@ namespace WindowsFormsApp1
         //アプリケーションのドラッグアンドドロップ
         public void AppDragDrop(object sender, DragEventArgs e)
         {
-            //Console.WriteLine("AppDragDrop_Start");
+            Console.WriteLine("AppDragDrop_Start");
             TabEx tabEx = sender as TabEx;
 
             //ファイルのドラッグアンドドロップ時
@@ -457,16 +588,16 @@ namespace WindowsFormsApp1
                 string[] arr = appPath.Split(separator);
 
                 string appName;
-                if (arr[arr.Length - 1].Length < appNameMax){
-                    appName = arr[arr.Length - 1];
+                if (arr[arr.Length - 1].Length > appNameMax){
+                    appName = arr[arr.Length - 1].Substring(0, appNameMax);
                 }
                 else {
-                    appName = arr[arr.Length - 1].Substring(0, appNameMax);
+                    appName = arr[arr.Length - 1];
                 }
 
                 //タブ情報ファイルの読み込み
                 var xmlDoc = new XmlDocument();
-                xmlDoc.Load(@"test.xml");
+                xmlDoc.Load(@"config.xml");
                 var tabNodes = xmlDoc.SelectNodes("tabs/tab");
 
                 //タブ情報ファイルの更新とアプリケーション表示用パネルの設置
@@ -474,7 +605,7 @@ namespace WindowsFormsApp1
                 {
                     var tabId = ((XmlElement)tabNodes[i]).GetAttribute("id"); //tabタグのid
 
-                    //現在選宅中のタブとtabタグのidが一致した場合
+                    //現在選択中のタブとtabタグのidが一致した場合
                     if (tabEx.SelectedTab.Name == tabId)
                     {
                         var appNodes = xmlDoc.SelectNodes("tabs/tab[@id='" + i + "']/app"); //appタグ情報
@@ -496,7 +627,7 @@ namespace WindowsFormsApp1
                             newAppNode.AppendChild(pathElement);
                             newAppNode.AppendChild(nameElement);
                             rootNode.AppendChild(newAppNode);
-                            xmlDoc.Save(@"test.xml");
+                            xmlDoc.Save(@"config.xml");
 
                             //アプリケーション表示用パネルの設置
                             PanelEx panelEx = new PanelEx();
@@ -511,7 +642,14 @@ namespace WindowsFormsApp1
                             label.Location = new Point(8 + (appId % 6) * 100, 78 + (appId / 6) * 100);
                             label.Size = new Size(85, 25);
                             label.Name = i.ToString() + "_l_" + appId.ToString();
-                            label.Text = appName;
+                            if (appName.Length > appNameMax)
+                            {
+                                label.Text = appName.Substring(0, appNameMax);
+                            }
+                            else
+                            {
+                                label.Text = appName;
+                            }
                             label.TextAlign = ContentAlignment.MiddleCenter;
                             label.AutoSize = false;
 
@@ -520,7 +658,14 @@ namespace WindowsFormsApp1
                             textBox.Location = new Point(8 + (appId % 6) * 100, 78 + (appId / 6) * 100);
                             textBox.Size = new Size(85, 50);
                             textBox.Name = i.ToString() + "_t_" + appId.ToString();
-                            textBox.Text = appName;
+                            if (appName.Length > appNameMax)
+                            {
+                                textBox.Text = appName.Substring(0, appNameMax);
+                            }
+                            else
+                            {
+                                textBox.Text = appName;
+                            }
                             textBox.Visible = false;
                             textBox.KeyPress += new KeyPressEventHandler(textBox_KeyPress);
 

@@ -30,6 +30,15 @@ namespace WindowsFormsApp1
         public void SetPath(string path0)
         {
             path = path0;
+            char[] separator = new char[] { '\\' };
+            string[] arr = path.Split(separator);
+
+            var currentPath = Directory.GetCurrentDirectory();
+
+            if (path.Contains(currentPath))
+            {
+
+            }
 
             box.SizeMode = PictureBoxSizeMode.StretchImage;
             if (File.Exists(path))
