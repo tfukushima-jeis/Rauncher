@@ -3,7 +3,7 @@
     partial class LauncherForm
     {
         /// <summary>
-        /// 必要なデザイナー変数です。
+        /// デザイナー変数です。
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
@@ -23,7 +23,7 @@
         #region Windows フォーム デザイナーで生成されたコード
 
         /// <summary>
-        /// デザイナー サポートに必要なメソッドです。このメソッドの内容を
+        /// デザイナー サポートにメソッドです。このメソッドの内容を
         /// コード エディターで変更しないでください。
         /// </summary>
         private void InitializeComponent()

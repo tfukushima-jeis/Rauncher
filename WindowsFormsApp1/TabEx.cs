@@ -16,6 +16,7 @@ namespace WindowsFormsApp1
         Form placeHolder = null;
         TextBox textbox = null;
         string tabName = null;
+        int tabNameMax = 12; //タブ名の最大文字数
 
         public TabEx()
         {            
@@ -65,28 +66,66 @@ namespace WindowsFormsApp1
 
         private void PlaceHolder_Deactivate(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(textbox.Text))
+            try
             {
-                this.SelectedTab.Text = textbox.Text;
-
-                //タブ情報ファイルの読み込み
-                var xmlDoc = new XmlDocument();
-                xmlDoc.Load(@"config.xml");
-                var tabNodes = xmlDoc.SelectNodes("tabs/tab"); //tabタグ情報
-
-                for (var i = 0; i < tabNodes.Count; i++)
+                if (!string.IsNullOrEmpty(textbox.Text))
                 {
-                    var tabid = ((XmlElement)tabNodes[i]).GetAttribute("id");
-
-                    if (tabid == tabName)
+                    if (textbox.Text.Length > tabNameMax)
                     {
-                        XmlNode tabNameNode = xmlDoc.SelectSingleNode("tabs/tab[@id='" + i + "']/tabname");
-                        tabNameNode.InnerText = textbox.Text.Substring(0, 12);
+                        this.SelectedTab.Text = textbox.Text.Substring(0, tabNameMax);
                     }
+                    else
+                    {
+                        this.SelectedTab.Text = textbox.Text;
+                    }
+
+                    //タブ情報ファイルの読み込み
+                    var xmlDoc = new XmlDocument();
+                    xmlDoc.Load(@"config.xml");
+                    var tabNodes = xmlDoc.SelectNodes("tabs/tab"); //tabタグ情報
+
+                    for (var i = 0; i < tabNodes.Count; i++)
+                    {
+                        var tabid = ((XmlElement)tabNodes[i]).GetAttribute("id");
+
+                        if (tabid == tabName)
+                        {
+                            XmlNode tabNameNode = xmlDoc.SelectSingleNode("tabs/tab[@id='" + i + "']/tabname");
+                            if (textbox.Text.Length > tabNameMax)
+                            {
+                                tabNameNode.InnerText = textbox.Text.Substring(0, tabNameMax);
+                            }
+                            else
+                            {
+                                tabNameNode.InnerText = textbox.Text;
+                            }
+                        }
+                    }
+                    xmlDoc.Save(@"config.xml");
                 }
-                xmlDoc.Save(@"config.xml");
+                placeHolder.Close();
             }
-            placeHolder.Close();
+            catch (System.IO.FileNotFoundException ex)
+            {
+                //FileNotFoundExceptionをキャッチした時
+                System.Console.WriteLine("設定ファイルが見つかりませんでした。");
+                System.Console.WriteLine(ex.Message);
+                MessageBox.Show("設定ファイルが見つかりませんでした。");
+            }
+            catch (System.IO.IOException ex)
+            {
+                //IOExceptionをキャッチした時
+                System.Console.WriteLine("設定ファイルがロックされている可能性があります。");
+                System.Console.WriteLine(ex.Message);
+                MessageBox.Show("設定ファイルがロックされている可能性があります。");
+            }
+            catch (System.UnauthorizedAccessException ex)
+            {
+                //UnauthorizedAccessExceptionをキャッチした時
+                System.Console.WriteLine("設定ファイルのアクセス許可がありません。");
+                System.Console.WriteLine(ex.Message);
+                MessageBox.Show("設定ファイルのアクセス許可がありません。");
+            }
         }
 
         private void Textbox_KeyPress(object sender, KeyPressEventArgs e)
