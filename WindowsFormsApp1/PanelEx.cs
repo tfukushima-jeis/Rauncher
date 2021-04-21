@@ -65,7 +65,7 @@ namespace WindowsFormsApp1
             }
         }
 
-        /*protected override void OnDragDrop(DragEventArgs e)
+        protected override void OnDragDrop(DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -83,7 +83,7 @@ namespace WindowsFormsApp1
                     box.Image = GetFolderImage();
                 }
             }
-        }*/
+        }
 
         Image GetFolderImage()
         {
