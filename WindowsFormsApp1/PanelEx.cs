@@ -27,23 +27,48 @@ namespace WindowsFormsApp1
             this.Controls.Add(box);
         }
 
+        public void LoadPath(string path0)
+        {
+            path = path0;
+            char[] separator = new char[] { '\\' };
+            string[] arr = path.Split(separator);
+
+            box.SizeMode = PictureBoxSizeMode.StretchImage;
+
+            var curPath = System.IO.Directory.GetCurrentDirectory();
+            var relPath = path;
+            if (path.Contains("\\tool\\"))
+            {
+                relPath = curPath + relPath;
+            }
+            if (File.Exists(relPath))
+            {
+                Icon appIcon = Icon.ExtractAssociatedIcon(relPath);
+                box.Image = appIcon.ToBitmap();
+            }
+            else if (Directory.Exists(path0))
+            {
+                box.Image = GetFolderImage();
+            }
+        }
+
         public void SetPath(string path0)
         {
             path = path0;
             char[] separator = new char[] { '\\' };
             string[] arr = path.Split(separator);
 
-            var currentPath = Directory.GetCurrentDirectory();
-
-            if (path.Contains(currentPath))
-            {
-
-            }
-
             box.SizeMode = PictureBoxSizeMode.StretchImage;
-            if (File.Exists(path))
+
+            var curPath = System.IO.Directory.GetCurrentDirectory();
+            var relPath = path;
+            if (relPath.Contains(curPath))
             {
-                Icon appIcon = Icon.ExtractAssociatedIcon(path0);
+                path = "\\tool\\" + arr[arr.Length - 1];
+            }
+            if (File.Exists(relPath))
+            {
+                Icon appIcon = Icon.ExtractAssociatedIcon(relPath);
                 box.Image = appIcon.ToBitmap();
             }
             else if (Directory.Exists(path0))
@@ -56,8 +81,19 @@ namespace WindowsFormsApp1
         {
             try
             {
-                Icon appIcon = Icon.ExtractAssociatedIcon(path);
-                System.Diagnostics.Process.Start(path);
+                var curPath = System.IO.Directory.GetCurrentDirectory();
+                var relPath = path;
+                if (path.Contains("\\tool\\"))
+                {
+                    relPath = curPath + relPath;
+                    Icon appIcon = Icon.ExtractAssociatedIcon(relPath);
+                    System.Diagnostics.Process.Start(relPath);
+                }
+                else
+                {
+                    Icon appIcon = Icon.ExtractAssociatedIcon(path);
+                    System.Diagnostics.Process.Start(path);
+                }
             }
             catch
             {

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.XPath;
 //using tabExControl;
 
 namespace WindowsFormsApp1
@@ -99,10 +100,43 @@ namespace WindowsFormsApp1
 
             try
             {
+                //tabタグをid順にソート
+                XDocument doc = XDocument.Load(@"config.xml");
+                var baseElement = doc.XPathSelectElement("tabs");
+                var sortedElements = baseElement.Elements()
+                    .OrderBy(e => (int)e.Attribute("id"))
+                    .ToList();
+                baseElement.ReplaceAll(sortedElements);
+
+                //appタグをid順にソート
+                var baseElements = doc.XPathSelectElements("tabs/tab");
+                foreach (XElement el in baseElements)
+                {
+                    var sortedElement = el.Elements()
+                        .OrderBy(e => (int)e.Attribute("id"))
+                        .ToList();
+                    el.ReplaceNodes(sortedElement);
+                }
+                doc.Save(@"config.xml");
+
                 //タブ情報ファイルの読み込み
                 var xmlDoc = new XmlDocument();
                 xmlDoc.Load(@"config.xml");
                 var tabs = xmlDoc.SelectNodes("tabs/tab"); //tabタグ情報
+
+                //tabタグのidをソート順に再割り振り
+                for (var i = 0; i < tabs.Count; i++)
+                {
+                    tabs[i].Attributes[0].Value = i.ToString();
+                    var apps = xmlDoc.SelectNodes("tabs/tab[@id='" + i + "']/app"); //appタグ情報
+
+                    //appタグのidをソート順に再割り振り
+                    for (var j = 0; j < apps.Count; j++)
+                    {
+                        apps[j].Attributes[0].Value = j.ToString();
+                    }
+                }
+                xmlDoc.Save(@"config.xml");
 
                 //tabタグの数分タブコントロールにタブページ追加
                 for (var i = 0; i < tabs.Count; i++)
@@ -129,7 +163,7 @@ namespace WindowsFormsApp1
                         panelEx.Location = new Point(25 + (j % 6) * 100, 25 + (j / 6) * 100);
                         panelEx.Size = new Size(50, 50);
                         panelEx.Name = i.ToString() + "_p_" + j.ToString();
-                        panelEx.SetPath(appPath);
+                        panelEx.LoadPath(appPath);
                         panelEx.ContextMenuStrip = appContextMenuStrip;
 
                         //アプリケーションのラベル設定
@@ -754,6 +788,12 @@ namespace WindowsFormsApp1
                                 XmlElement pathElement = xmlDoc.CreateElement("path");
                                 XmlElement nameElement = xmlDoc.CreateElement("name");
                                 XmlText pathText = xmlDoc.CreateTextNode(appPath);
+                                //相対パスの登録
+                                var absPath = System.IO.Directory.GetCurrentDirectory();
+                                if (appPath.Contains(absPath))
+                                {
+                                    pathText = xmlDoc.CreateTextNode("\\tool\\" + arr[arr.Length - 1]);
+                                }
                                 XmlText nameText = xmlDoc.CreateTextNode(appName);
                                 pathElement.AppendChild(pathText);
                                 nameElement.AppendChild(nameText);
