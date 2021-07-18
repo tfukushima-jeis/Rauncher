@@ -14,6 +14,7 @@ namespace WindowsFormsApp1
     public class PanelEx : Panel
     {
         string path = "";
+        string name = "";
         PictureBox box = new PictureBox();
 
         public PanelEx()
@@ -27,51 +28,53 @@ namespace WindowsFormsApp1
             this.Controls.Add(box);
         }
 
-        public void LoadPath(string path0)
+        public void LoadPath(string appPath, string appName)
         {
-            path = path0;
+            path = appPath;
+            name = appName;
+
             char[] separator = new char[] { '\\' };
             string[] arr = path.Split(separator);
 
             box.SizeMode = PictureBoxSizeMode.StretchImage;
 
             var curPath = System.IO.Directory.GetCurrentDirectory();
-            var relPath = path;
-            if (path.Contains("\\tool\\"))
+            if (arr[1] == "tool")
             {
-                relPath = curPath + relPath;
+                path = curPath + appPath;
             }
-            if (File.Exists(relPath))
+            if (File.Exists(path))
             {
-                Icon appIcon = Icon.ExtractAssociatedIcon(relPath);
+                Icon appIcon = Icon.ExtractAssociatedIcon(path);
                 box.Image = appIcon.ToBitmap();
             }
-            else if (Directory.Exists(path0))
+            else if (Directory.Exists(appPath))
             {
                 box.Image = GetFolderImage();
             }
         }
 
-        public void SetPath(string path0)
+        public void SetPath(string appPath, string appName)
         {
-            path = path0;
+            path = appPath;            
+            name = appName;
             char[] separator = new char[] { '\\' };
             string[] arr = path.Split(separator);
 
             box.SizeMode = PictureBoxSizeMode.StretchImage;
 
-            var curPath = System.IO.Directory.GetCurrentDirectory();
-            var relPath = path;
-            if (relPath.Contains(curPath))
+            var curPath = System.Windows.Forms.Application.StartupPath;
+            if (arr[1] == "tool")
             {
-                path = "\\tool\\" + arr[arr.Length - 1];
+                path = curPath + appPath;
+                Console.WriteLine(path);
             }
-            if (File.Exists(relPath))
+            if (File.Exists(path))
             {
-                Icon appIcon = Icon.ExtractAssociatedIcon(relPath);
+                Icon appIcon = Icon.ExtractAssociatedIcon(path);
                 box.Image = appIcon.ToBitmap();
             }
-            else if (Directory.Exists(path0))
+            else if (Directory.Exists(appPath))
             {
                 box.Image = GetFolderImage();
             }
@@ -79,25 +82,33 @@ namespace WindowsFormsApp1
 
         private void Box_Click(object sender, EventArgs e)
         {
+            char[] separator = new char[] { '\\' };
+            string[] arr = path.Split(separator);
+
             try
             {
-                var curPath = System.IO.Directory.GetCurrentDirectory();
-                var relPath = path;
-                if (path.Contains("\\tool\\"))
+                // 実行前確認
+                DialogResult result = MessageBox.Show(name + "を実行します。",
+                                        "実行確認",
+                                        MessageBoxButtons.YesNo,
+                                        MessageBoxIcon.Exclamation,
+                                        MessageBoxDefaultButton.Button2);
+                // 選択したボタンを判定
+                if (result == DialogResult.Yes)
                 {
-                    relPath = curPath + relPath;
-                    Icon appIcon = Icon.ExtractAssociatedIcon(relPath);
-                    System.Diagnostics.Process.Start(relPath);
-                }
-                else
-                {
+                    // はいを選択
                     Icon appIcon = Icon.ExtractAssociatedIcon(path);
                     System.Diagnostics.Process.Start(path);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                // 異常時（基本的に発生しない想定だが）
+                // 例えば、パスにファイルが存在しないとか。
                 MessageBox.Show("アプリケーションを実行できません。");
+
+                // できればログに出力したいが、いったんはそのまま表示する（わら）
+                MessageBox.Show(ex.Message);
             }
         }
 
